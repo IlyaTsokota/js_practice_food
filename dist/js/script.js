@@ -221,12 +221,13 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener('scroll', showModalByScroll); //Cards
 
   class MenuCard {
-    constructor(src, alt, title, desc, price, parentSelector) {
+    constructor(src, alt, title, desc, price, parentSelector, ...classes) {
       this.src = src;
       this.alt = alt;
       this.title = title;
       this.desc = desc;
       this.price = price;
+      this.classes = classes;
       this.transfer = 27;
       this.parent = document.querySelector(parentSelector);
       this.changeToUAH();
@@ -238,8 +239,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     render() {
       const element = document.createElement('div');
+
+      if (this.classes.length === 0) {
+        this.classes = 'menu__item';
+        element.classList.add(this.classes);
+      } else {
+        this.classes.forEach(className => element.classList.add(className));
+      }
+
       element.innerHTML = `
-			<div class="menu__item">
 					<img src="${this.src}" alt="${this.alt}">
 					<h3 class="menu__item-subtitle">${this.title}</h3>
 					<div class="menu__item-descr">${this.desc}</div>
@@ -248,16 +256,55 @@ document.addEventListener("DOMContentLoaded", () => {
 						<div class="menu__item-cost">Цена:</div>
 						<div class="menu__item-total"><span>${this.price}</span> грн/день</div>
 					</div>
-			</div>
 			`;
       this.parent.append(element);
     }
 
   }
 
-  new MenuCard('img/tabs/vegy.jpg', 'vegy', 'Меню "Фитнес"', 'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!', 229, '.menu .container').render();
-  new MenuCard('img/tabs/vegy.jpg', 'vegy', 'Меню "Фитнес"', 'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!', 229, '.menu .container').render();
-  new MenuCard('img/tabs/vegy.jpg', 'vegy', 'Меню "Фитнес"', 'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!', 229, '.menu .container').render();
+  new MenuCard('img/tabs/vegy.jpg', 'vegy', 'Меню "Фитнес"', 'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!', 229, '.menu .container', 'menu__item', 'big').render();
+  new MenuCard('img/tabs/vegy.jpg', 'vegy', 'Меню "Фитнес"', 'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!', 229, '.menu .container', 'menu__item').render();
+  new MenuCard('img/tabs/vegy.jpg', 'vegy', 'Меню "Фитнес"', 'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!', 229, '.menu .container').render(); //Forms
+
+  const forms = document.querySelectorAll('form');
+  const message = {
+    loading: 'Загрузка',
+    success: 'Спасибо! Скоро мы с вами свяжемся',
+    failure: 'Что-то пошло не так...'
+  };
+  forms.forEach(item => postData(item));
+
+  function postData(form) {
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const formData = new FormData(form),
+            statusMessage = document.createElement('div'),
+            request = new XMLHttpRequest(),
+            obj = {};
+      formData.forEach((value, key) => {
+        obj[key] = value;
+      });
+      const json = JSON.stringify(obj);
+      statusMessage.classList.add('status');
+      statusMessage.textContent = message.loading;
+      form.append(statusMessage);
+      request.open('POST', 'server.php');
+      request.setRequestHeader('Content-type', 'application/json');
+      request.send(json);
+      request.addEventListener('load', () => {
+        if (request.status === 200) {
+          console.log(request.response);
+          statusMessage.textContent = message.success;
+          form.reset();
+          setTimeout(() => {
+            statusMessage.remove();
+          }, 2000);
+        } else {
+          statusMessage.textContent = message.failure;
+        }
+      });
+    });
+  }
 });
 
 /***/ })
