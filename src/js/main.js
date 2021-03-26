@@ -274,6 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	//slider
 
 	const slides = document.querySelectorAll('.offer__slide'),
+		slider = document.querySelector('.offer__slider'),
 		prev = document.querySelector('.offer__slider-prev'),
 		next = document.querySelector('.offer__slider-next'),
 		total = document.querySelector('#total'),
@@ -293,30 +294,29 @@ document.addEventListener("DOMContentLoaded", () => {
 	slides.forEach(slide => {
 		slide.style.width = width;
 	});
+
+
 	const addZero = num => num <= 9 ? `0${num}` : num;
 	total.textContent = addZero(slides.length);
 	current.textContent = addZero((offset / parseInt(width)) + 1);
+	slider.style.position = 'relative';
 
-	// function showSlide(n = 1) {
-	// 	if (n > slides.length) {
-	// 		slideIndex = 1;
-	// 	}
-	// 	if (n < 1) {
-	// 		slideIndex = slides.length;
-	// 	}
-	// 	current.textContent = addZero(slideIndex);
-	// 	slides.forEach(item => item.style.display = 'none');
-	// 	slides[slideIndex - 1].style.display = '';
+	const indicators = document.createElement('ol'),
+		dots = [];
+	indicators.classList.add('carousel-indicators');
+	slider.append(indicators);
 
-	// }
-
-
-	// function plusSlide(n) {
-	// 	showSlide(slideIndex += n);
-	// }
+	for (let i = 0; i < slides.length; i++) {
+		const dot = document.createElement('li');
+		dot.setAttribute('data-slide-to', i);
+		dot.classList.add('dot');
+		indicators.append(dot);
+		dots.push(dot);
+	}
+	dots[offset / parseInt(width)].style.opacity = 1;
 
 	prev.addEventListener('click', () => {
-		const slideWidth = +width.slice(0, width.length - 2);
+		const slideWidth = parseInt(width);
 
 		if (offset === 0) {
 			offset = slideWidth * (slides.length - 1);
@@ -324,20 +324,35 @@ document.addEventListener("DOMContentLoaded", () => {
 			offset -= slideWidth;
 		}
 
-		current.textContent = addZero((offset / parseInt(width)) + 1);
-		slidesField.style.transform = `translateX(-${offset}px)`;
+		moveSlide(slideWidth, offset);
+
 	});
 
 	next.addEventListener('click', () => {
-		const slideWidth = +width.slice(0, width.length - 2);
+		const slideWidth = parseInt(width);
 
 		if (offset === slideWidth * (slides.length - 1)) {
 			offset = 0;
 		} else {
 			offset += slideWidth;
 		}
+		moveSlide(slideWidth, offset);
 
-		current.textContent = addZero((offset / parseInt(width)) + 1);
+	});
+
+	function moveSlide(slideWidth, offset) {
+		let slideIndex = offset / slideWidth;
+		current.textContent = addZero(slideIndex + 1);
 		slidesField.style.transform = `translateX(-${offset}px)`;
+		dots.forEach(dot => dot.style.opacity = '.5');
+		dots[slideIndex].style.opacity = 1;
+	}
+
+	dots.forEach(dot => {
+		dot.addEventListener('click', () => {
+			const slideWidth = parseInt(width);
+			offset = dot.getAttribute('data-slide-to') * slideWidth;
+			moveSlide(slideWidth, offset);
+		});
 	});
 });
