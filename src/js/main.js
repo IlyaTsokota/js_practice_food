@@ -180,23 +180,23 @@ document.addEventListener("DOMContentLoaded", () => {
 		return await res.json();
 	};
 
+	function createCard(data) {
+		data.forEach(({ img, altimg, title, descr, price }) => {
+			new MenuCard(
+				img,
+				altimg,
+				title,
+				descr,
+				price,
+				'.menu .container'
+			).render();
+		});
+	}
 	getResource('http://localhost:3000/menu')
-		.then(data => {
-			data.forEach(({ img, altimg, title, descr, price }) => {
-				new MenuCard(
-					img,
-					altimg,
-					title,
-					descr,
-					price,
-					'.menu .container',
-					'menu__item',
-				).render();
-			});
-		}
-		);
+		.then(data => createCard(data));
 
 	//Forms
+
 
 	const forms = document.querySelectorAll('form');
 
@@ -271,6 +271,43 @@ document.addEventListener("DOMContentLoaded", () => {
 			closeModal(parent);
 		}, 4000);
 	}
+	//slider
+
+	const slides = document.querySelectorAll('.offer__slide'),
+		prev = document.querySelector('.offer__slider-prev'),
+		next = document.querySelector('.offer__slider-next'),
+		total = document.querySelector('#total'),
+		current = document.querySelector('#current');
+
+	const addZero = num => num <= 9 ? `0${num}` : num;
+	total.textContent = addZero(slides.length);
+	let slideIndex = 1;
+
+	showSlide();
+
+	function showSlide(n = 1) {
+		if (n > slides.length) {
+			slideIndex = 1;
+		}
+		if (n < 1) {
+			slideIndex = slides.length;
+		}
+		current.textContent = addZero(slideIndex);
+		slides.forEach(item => item.style.display = 'none');
+		slides[slideIndex - 1].style.display = '';
+
+	}
 
 
+	function plusSlide(n) {
+		showSlide(slideIndex += n);
+	}
+
+	prev.addEventListener('click', () => {
+		plusSlide(-1);
+	});
+
+	next.addEventListener('click', () => {
+		plusSlide(1);
+	});
 });
