@@ -170,35 +170,31 @@ document.addEventListener("DOMContentLoaded", () => {
 			this.parent.append(element);
 		}
 	}
+	const getResource = async (url) => {
+		const res = await fetch(url);
 
-	new MenuCard(
-		'img/tabs/vegy.jpg',
-		'vegy',
-		'Меню "Фитнес"',
-		'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
-		229,
-		'.menu .container',
-		'menu__item',
-		'big'
-	).render();
-	new MenuCard(
-		'img/tabs/vegy.jpg',
-		'vegy',
-		'Меню "Фитнес"',
-		'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
-		229,
-		'.menu .container',
-		'menu__item'
+		if (!res.ok) {
+			throw new Error(`Could not fetch ${url}, status: ${res.status}`);
+		}
 
-	).render();
-	new MenuCard(
-		'img/tabs/vegy.jpg',
-		'vegy',
-		'Меню "Фитнес"',
-		'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
-		229,
-		'.menu .container'
-	).render();
+		return await res.json();
+	};
+
+	getResource('http://localhost:3000/menu')
+		.then(data => {
+			data.forEach(({ img, altimg, title, descr, price }) => {
+				new MenuCard(
+					img,
+					altimg,
+					title,
+					descr,
+					price,
+					'.menu .container',
+					'menu__item',
+				).render();
+			});
+		}
+		);
 
 	//Forms
 
@@ -209,20 +205,28 @@ document.addEventListener("DOMContentLoaded", () => {
 		success: 'Спасибо! Скоро мы с вами свяжемся',
 		failure: 'Что-то пошло не так...'
 	};
-	forms.forEach(item => postData(item));
+	forms.forEach(item => bindPostData(item));
 
-	function postData(form) {
+	const postData = async (url, data) => {
+		const res = await fetch(url, {
+			method: 'POST',
+			headers: {
+				'Content-type': 'application/json'
+			},
+			body: data
+		});
+		return await res.json();
+	};
+
+
+	function bindPostData(form) {
 		form.addEventListener('submit', (e) => {
 			e.preventDefault();
-			const formData = new FormData(form),
-				statusMessage = document.createElement('img'),
-				obj = {};
-
-
-
-			formData.forEach((value, key) => {
-				obj[key] = value;
-			});
+			const json = JSON.stringify(Object.fromEntries(new FormData(form).entries())),
+				statusMessage = document.createElement('img');
+			// formData.forEach((value, key) => {
+			// 	obj[key] = value;
+			// });
 
 			statusMessage.style.cssText = `
 				display: block;
@@ -231,14 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			statusMessage.setAttribute('src', message.loading);
 			form.insertAdjacentElement('afterend', statusMessage);
 
-			fetch('server.php', {
-				method: 'POST',
-				headers: {
-					'Content-type': 'application/json'
-				},
-				body: JSON.stringify(obj)
-			})
-				.then(data => data.text())
+			postData('http://localhost:3000/requests', json)
 				.then(data => {
 					console.log(data);
 					showThanksModal(message.success);
